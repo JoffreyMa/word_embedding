@@ -1,9 +1,5 @@
-# Contrôle de version
-import sys
-
 # Packages nécessaires
 import numpy as np
-import os
 import re
 
 
@@ -61,3 +57,46 @@ def vocabulary(corpus, voc_threshold=None):
 
 
     return vocabulary, vocabulary_word_counts
+
+
+def co_occurence_matrix(corpus, vocabulary, window=0, distance_weighting=False):
+    """
+    Params:
+        corpus (list of list of strings): corpus of sentences
+        vocabulary (dictionary): words to use in the matrix
+        window (int): size of the context window; when 0, the context is the whole sentence
+        distance_weighting (bool): indicates if we use a weight depending on the distance between words for co-oc counts
+    Returns:
+        matrix (array of size (len(vocabulary), len(vocabulary))): the co-oc matrix, using the same ordering as the vocabulary given in input    
+    """ 
+    l = len(vocabulary)
+    M = np.zeros((l, l))
+    for sent in corpus:
+        # Obtenir la phrase:
+        sent = clean_and_tokenize(sent)
+        # Obtenir les indexs de la phrase grace au vocabulaire: 
+        sent_idx = [vocabulary.get(word, -1) for word in sent]
+        
+        # Parcourir les indexs de la phrase et ajouter 1 / dist(i, j) à M[i, j] si les mots d'index i et j apparaissent dans la même fenêtre. 
+        for i, idx_i in enumerate(sent_idx):
+            # On vérifie que le mot est reconnu par le vocabulaire:
+            if idx_i > -1:
+                # Si on considère un contexte limité:
+                if window > 0:
+                    l_ctx_idx = sent_idx[max(0, i - window):i]
+                # Si on considère que le contexte est la phrase entière:
+                else:
+                    l_ctx_idx = sent_idx[:i]
+                    
+                # On parcourt cette liste et on update M[i, j]:    
+                for j, idx_j in enumerate(l_ctx_idx):
+                    # ... en s'assurant que le mot correspondant à 'idx_j' est reconnu par le vocabulaire
+                    if idx_j > -1:
+                        # Calcul du poids:
+                        if distance_weighting:
+                            weight = 1.0 / (i - j)
+                        else:
+                            weight = 1.0
+                        M[idx_i, idx_j] += weight
+                        M[idx_j, idx_i] += weight
+    return M
