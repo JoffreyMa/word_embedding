@@ -2,7 +2,6 @@
 import numpy as np
 import re
 
-
 def clean_and_tokenize(text):
     """
     Cleaning a document with:
@@ -22,7 +21,6 @@ def clean_and_tokenize(text):
     
     tokens = text.split()        
     return tokens
-
 
 def vocabulary(corpus, voc_threshold=None):
     """
@@ -58,7 +56,6 @@ def vocabulary(corpus, voc_threshold=None):
 
     return vocabulary, vocabulary_word_counts
 
-
 def co_occurence_matrix(corpus, vocabulary, window=0, distance_weighting=False):
     """
     Params:
@@ -72,27 +69,27 @@ def co_occurence_matrix(corpus, vocabulary, window=0, distance_weighting=False):
     l = len(vocabulary)
     M = np.zeros((l, l))
     for sent in corpus:
-        # Obtenir la phrase:
+        # Get the sentence:
         sent = clean_and_tokenize(sent)
-        # Obtenir les indexs de la phrase grace au vocabulaire: 
+        # Get the indexes of the sentence using the vocabulary: 
         sent_idx = [vocabulary.get(word, -1) for word in sent]
         
-        # Parcourir les indexs de la phrase et ajouter 1 / dist(i, j) à M[i, j] si les mots d'index i et j apparaissent dans la même fenêtre. 
+        # Go through the sentence indexes and add 1 / dist(i, j) to M[i, j] if words with index i and j appear in the same window. 
         for i, idx_i in enumerate(sent_idx):
-            # On vérifie que le mot est reconnu par le vocabulaire:
+            # Check if the word is recognized by the vocabulary:
             if idx_i > -1:
-                # Si on considère un contexte limité:
+                # If we consider a limited context:
                 if window > 0:
                     l_ctx_idx = sent_idx[max(0, i - window):i]
-                # Si on considère que le contexte est la phrase entière:
+                # If we consider that the context is the entire sentence:
                 else:
                     l_ctx_idx = sent_idx[:i]
                     
-                # On parcourt cette liste et on update M[i, j]:    
+                # Go through this list and update M[i, j]:    
                 for j, idx_j in enumerate(l_ctx_idx):
-                    # ... en s'assurant que le mot correspondant à 'idx_j' est reconnu par le vocabulaire
+                    # ... making sure that the word corresponding to 'idx_j' is recognized by the vocabulary
                     if idx_j > -1:
-                        # Calcul du poids:
+                        # Calculate the weight:
                         if distance_weighting:
                             weight = 1.0 / (i - j)
                         else:
